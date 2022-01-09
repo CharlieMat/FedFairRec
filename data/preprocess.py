@@ -240,7 +240,7 @@ def move_user_data(from_df, to_df, moving_user, user_hist, field_name):
         remain_indices[H] = True
     to_df = pd.concat([to_df, from_df[moving_indices]], axis = 0)
     from_df = from_df[remain_indices]  
-    print(f"#user moved: {len(moving_user)}")
+    print(f"\n#user moved: {len(moving_user)}")
     print(f"After moving: Target DataFrame: {len(to_df)}, Source Data Frame: {len(from_df)}")
     return to_df, from_df
 

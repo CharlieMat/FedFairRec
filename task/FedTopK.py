@@ -50,6 +50,7 @@ class FedTopK(GeneralTask):
         self.at_k_list = args.at_k
         self.n_eval_process = args.n_eval_process
         super().__init__(args, reader)
+        self.batch_size = 1 # userwise training
         self.eval_batch_size = 1  # userwise evaluation
         
     def log(self):

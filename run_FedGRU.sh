@@ -1,8 +1,10 @@
 ROOT="/home/sl1471/workspace/experiments";
-
-# data_key="ml-1m";
+data_key="ml-1m";
 # data_key="amz_Books";
-data_key='amz_Movies_and_TV';
+# data_key="amz_Electronics";
+# data_key="amz_Sports_and_Outdoors";
+# data_key="amz_Clothing_Shoes_and_Jewelry";
+# data_key="amz_Video_Games";
 
 # train_file=${ROOT}${data_key}"/tsv_data/train.tsv";
 # val_file=${ROOT}${data_key}"/tsv_data/val.tsv";
@@ -13,57 +15,55 @@ data_key='amz_Movies_and_TV';
 mkdir -p ${ROOT}/${data_key}/models
 mkdir -p ${ROOT}/${data_key}/logs
 
-task_name="FedFairTopK";
+task_name="FedTopK";
 METRIC="_AUC";
-device=2;
+device=3;
 
-model_name="FedMF";
-REG=1.0;
-LOSS="pairwisebpr";
+# model_name="FedMF";
+# REG=0.01;
+# LOSS="pairwisebpr";
+# NNEG=1;
+# DIM=32;
+# DEVICE_DROPOUT=0.1;
+# ELASTIC_MU=0.01;
+# FED_TYPE="fedavg";
+
+model_name="FedGRU";
+REG=0.01;
+LOSS="softmax";
 NNEG=1;
 DIM=32;
-
-rho=1;
-group='activity';
-
 DEVICE_DROPOUT=0.1;
 ELASTIC_MU=0.01;
 FED_TYPE="fedavg";
-FED_BETA=0.5;
-N_LOCAL_STEP=3;
 
-for LR in 0.001 #0.0003 0.003
+for N_LOCAL_STEP in 1
 do
-    for lambda in 0.1 #1.0 0 #0.3 1.0 3.0 0.
+    for LR in 0.1
     do
         python main.py\
-            --proctitle "Finrir"\
+            --proctitle "Sif"\
             --model ${model_name}\
             --task ${task_name}\
-            --n_round 3\
+            --n_round 1\
             --train_and_eval\
             --seed 9\
-            --optimizer "SGD"\
+            --optimizer "Adam"\
             --cuda ${device}\
             --n_worker 4\
-            --epoch 30\
-            --batch_size 512\
+            --epoch 40\
             --lr ${LR}\
             --val_sample_p 0.1\
             --with_val \
             --temper 6\
             --stop_metric ${METRIC}\
-            --model_path ${ROOT}/${data_key}/models/f2rec_Fair${model_name}_lr${LR}_reg${REG}_${LOSS}.pkl\
+            --model_path ${ROOT}/${data_key}/models/${model_name}_lr${LR}_reg${REG}_${LOSS}_local${N_LOCAL_STEP}_${FED_TYPE}.pkl\
             --loss ${LOSS}\
             --l2_coef ${REG}\
             --emb_size ${DIM}\
-            --fair_rho ${rho}\
-            --fair_lambda ${lambda}\
-            --fair_group_feature ${group}\
             --device_dropout_p ${DEVICE_DROPOUT}\
             --n_local_step ${N_LOCAL_STEP}\
             --aggregation_func ${FED_TYPE}\
-            --mitigation_trade_off ${FED_BETA}\
             --elastic_mu ${ELASTIC_MU}\
             --data_file ${ROOT}/${data_key}/tsv_data/\
             --user_meta_data ${ROOT}/${data_key}/meta_data/user.meta\
@@ -74,6 +74,6 @@ do
             --item_fields_vocab_file ${ROOT}/${data_key}/meta_data/item_fields.vocab\
             --n_neg ${NNEG}\
             --n_neg_val 100
-    #         > ${ROOT}/${data_key}/logs/fairtrain_and_eval_${model_name}_lr${LR}_reg${REG}_loss${LOSS}_lambda${lambda}.log
+#             > ${ROOT}/${data_key}/logs/train_and_eval_${model_name}_lr${LR}_reg${REG}_loss${LOSS}_local${N_LOCAL_STEP}_${FED_TYPE}.log
     done
 done

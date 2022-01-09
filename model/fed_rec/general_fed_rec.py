@@ -55,7 +55,7 @@ class FederatedRecModel(GeneralRecModel):
         print("\tdevice_dropout_type = " + str(self.device_dropout_type))
         print("\tn_local_step = " + str(self.n_local_step))
         print("\trandom_local_step = " + str(self.random_local_step))
-        print("\tmitigation_trade_off = " + str(self.mitigation_alpha))
+        print("\tmitigation_trade_off = " + str(self.mitigation_beta))
         print("\taggregation_func = " + str(self.aggregation_func))
         print("\telastic_mu = " + str(self.elastic_mu))
         
@@ -64,7 +64,7 @@ class FederatedRecModel(GeneralRecModel):
         self.device_dropout_type = args.device_dropout_type
         self.n_local_step = args.n_local_step
         self.random_local_step = args.random_local_step
-        self.mitigation_alpha = args.mitigation_trade_off
+        self.mitigation_beta = args.mitigation_trade_off
         self.n_device = reader.n_users
         self.aggregation_func = args.aggregation_func
         self.elastic_mu = args.elastic_mu
@@ -73,53 +73,52 @@ class FederatedRecModel(GeneralRecModel):
             self.individual_p = np.random.uniform(0.,self.device_dropout_p,self.n_device)
             self.individual_p[0] = self.device_dropout_p
         
+#     def get_regularization(self, *modules):
+# #         p = modules[0].parameters()
+# #         reg = torch.mean(p * p)
+#         reg = 0
+#         for m in modules:
+#             for p in m.parameters():
+#                 reg = torch.sum(p * p) + reg
+#         return reg
             
-    def get_loss(self, feed_dict: dict, out_dict: dict):
-        """
-        @input:
-        - feed_dict: {"resp":, ...}
-        - out_dict: {"preds":, "neg_preds":, "reg":, "neg_reg":,}
+#     def get_loss(self, feed_dict: dict, out_dict: dict):
+#         """
+#         The same as GeneralRecModel.get_loss(), except changing the loss terms from means to sum
+#         """
         
-        Loss terms implemented:
-        - regression: for rating prediction
-        - pairwisebpr, pairwisemrl, pointwise: ranking
-        
-        Loss terms not implemented:
-        - cross-entropy: for classification
-        """
-        
-        preds, reg = out_dict["preds"].view(-1), out_dict["reg"] # size (B,)
+#         preds, reg = out_dict["preds"].view(-1), out_dict["reg"] # size (B,)
 
-        # loss
-        if self.loss_type == "regression":
-            resps = feed_dict["resp"] # size (B,)
-            loss = torch.mean(self.mse_loss(preds, resps.view(-1))) + self.l2_coef * reg
-            return loss
-        else:
-            B = preds.shape[0]
-            neg_preds = out_dict["neg_preds"].view(-1) # size (B*L,)
-            neg_reg = out_dict["neg_reg"] # scalar
-            ratio = len(neg_preds) / len(preds) # number of negative samples per positive sample
-            extended_preds = preds.view(-1,1).repeat(1,int(ratio)).view(-1)
-            if self.loss_type == "pairwisebpr":
-                loss = torch.sum(self.sigmoid(neg_preds - extended_preds))
-            elif self.loss_type == "pairwisemrl":
-                y = torch.ones_like(neg_preds)
-                mrl = self.mrl_loss(self.sigmoid(extended_preds), self.sigmoid(neg_preds), y)
-                loss = torch.sum(mrl)
-            elif self.loss_type == "pointwise":
-                pos_target = torch.ones_like(extended_preds)
-                neg_target = torch.zeros_like(neg_preds)
-                loss = torch.sum(self.bce_loss(self.sigmoid(extended_preds), pos_target)) + \
-                        torch.sum(self.bce_loss(self.sigmoid(neg_preds), neg_target))
-            elif self.loss_type == "softmax":
-                labels = torch.tensor([0] * B).to(self.device)
-                combined_preds = torch.cat([preds.view(B,1),neg_preds.view(B,-1)], dim = 1)
-                loss = torch.sum(self.ce_loss(combined_preds, labels))
-            else:
-                raise NotImplemented
-            loss = loss + self.l2_coef * (reg * ratio + neg_reg)
-            return loss
+#         # loss
+#         if self.loss_type == "regression":
+#             resps = feed_dict["resp"] # size (B,)
+#             loss = torch.mean(self.mse_loss(preds, resps.view(-1))) + self.l2_coef * reg
+#             return loss
+#         else:
+#             B = preds.shape[0]
+#             neg_preds = out_dict["neg_preds"].view(-1) # size (B*L,)
+#             neg_reg = out_dict["neg_reg"] # scalar
+#             ratio = len(neg_preds) / len(preds) # number of negative samples per positive sample
+#             extended_preds = preds.view(-1,1).repeat(1,int(ratio)).view(-1)
+#             if self.loss_type == "pairwisebpr":
+#                 loss = torch.sum(self.sigmoid(neg_preds - extended_preds))
+#             elif self.loss_type == "pairwisemrl":
+#                 y = torch.ones_like(neg_preds)
+#                 mrl = self.mrl_loss(self.sigmoid(extended_preds), self.sigmoid(neg_preds), y)
+#                 loss = torch.sum(mrl)
+#             elif self.loss_type == "pointwise":
+#                 pos_target = torch.ones_like(extended_preds)
+#                 neg_target = torch.zeros_like(neg_preds)
+#                 loss = torch.sum(self.bce_loss(self.sigmoid(extended_preds), pos_target)) + \
+#                         torch.sum(self.bce_loss(self.sigmoid(neg_preds), neg_target))
+#             elif self.loss_type == "softmax":
+#                 labels = torch.tensor([0] * B).to(self.device)
+#                 combined_preds = torch.cat([preds.view(B,1),neg_preds.view(B,-1)], dim = 1)
+#                 loss = torch.sum(self.ce_loss(combined_preds, labels))
+#             else:
+#                 raise NotImplemented
+#             loss = loss + self.l2_coef * (reg * ratio + neg_reg)
+#             return loss
         
     ##################################
     #        federated control       #
@@ -187,13 +186,14 @@ class FederatedRecModel(GeneralRecModel):
 #         with torch.no_grad():
 #             for name, param in self.named_parameters():
 #                 if name in self.cloud_params and name in self.param_proposal:
-#                     self.cloud_params[name] = self.cloud_params[name] * (1-self.mitigation_alpha) + \
-#                                             self.param_proposal[name] * self.mitigation_alpha / self.param_proposal_count[name]
+#                     self.cloud_params[name] = self.cloud_params[name] * (1-self.mitigation_beta) + \
+#                                             self.param_proposal[name] * self.mitigation_beta / self.param_proposal_count[name]
         with torch.no_grad():
             for name, param in self.cloud_params.items():
                 if name in self.param_proposal:
-                    agg = self.cloud_params[name] * (1-self.mitigation_alpha) + \
-                            self.param_proposal[name] * self.mitigation_alpha / self.param_proposal_count[name]#.view(-1,1)
+#                     agg = self.cloud_params[name] * (1-self.mitigation_beta) + \
+#                             self.param_proposal[name] * self.mitigation_beta / self.param_proposal_count[name]#.view(-1,1)
+                    agg = self.param_proposal[name] / self.param_proposal_count[name]#.view(-1,1)
                     select = self.param_proposal_count[name].view(-1) > 0
                     self.cloud_params[name][select] = agg[select]
     

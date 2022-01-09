@@ -40,6 +40,8 @@ def calculate_ranking_metric(pos_pred, neg_pred, k_list, report = {}):
     '''
     if len(report) == 0:
         report = init_ranking_report(k_list)
+    pos_pred = pos_pred.view(-1)
+    neg_pred = neg_pred.view(-1)
     R = pos_pred.shape[0] # number of positive samples
     L = neg_pred.shape[0] # number of negative samples
 #     print(pos_pred)

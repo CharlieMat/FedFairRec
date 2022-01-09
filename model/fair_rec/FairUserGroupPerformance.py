@@ -107,7 +107,7 @@ class FairUserGroupPerformance(GeneralModelFairness):
         assert self.feature_values and len(self.feature_values) >= 2
         # set up sufficient statistics
         self.prev_statistics = {v: np.random.random() for v in self.feature_values}
-        self.statistics = {"sum": {v: 0. for v in self.feature_values}, 
+        self.statistics = {"sum": {v: 0.5 for v in self.feature_values}, 
                            "count": {v: 1 for v in self.feature_values}}
         
         
@@ -115,6 +115,7 @@ class FairUserGroupPerformance(GeneralModelFairness):
         # sufficient statistics of feature_values: sum and count of each group value
         print(self.statistics)
         self.prev_statistics = {v: self.statistics['sum'][v] / self.statistics['count'][v] for v in self.feature_values}
+        print(f"Previous statistics:\n{self.prev_statistics}")
         self.statistics = {"sum": {v: 0. for v in self.feature_values}, 
                            "count": {v: 0 for v in self.feature_values}}
     
@@ -207,7 +208,7 @@ class FairUserGroupPerformance(GeneralModelFairness):
             elif method == 'original':
                 for i,A in enumerate(performance_list):
                     for j in range(i+1,len(performance_list)):
-                        F.append(self.fair_lambda * (abs(A-performance_list[j]) ** self.fair_rho))
+                        F.append((abs(A-performance_list[j]) ** self.fair_rho))
             report[metric] = np.mean(F)
         assert selected_metric in report
         return report

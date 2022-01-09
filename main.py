@@ -58,6 +58,7 @@ if __name__ == '__main__':
     # GPU
     if args.cuda >= 0 and torch.cuda.is_available():
         os.environ["CUDA_VISIBLE_DEVICES"] = str(args.cuda)
+        torch.cuda.set_device(args.cuda)
         device = "cuda:" + str(args.cuda)
     else:
         device = "cpu"

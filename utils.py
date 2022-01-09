@@ -151,6 +151,7 @@ def extract_results(log_root_path, customized_args = [], file_name_identifier = 
                             results.append(eval(line))
                             found = 0
             if len(results) > 0:
+                args += ','
                 result_dict[j] = {'args': args}
                 result_dict[j]['model_name'] = model_name
                 for k in customized_args:
