@@ -103,7 +103,7 @@ class Fed_FUGP(FairUserGroupPerformance):
         D = - group_difference / len(self.feature_values) + 1
         # regulate gradient
         with torch.no_grad():
-            for name, param in model.cloud_params.items():
+            for name, param in model.named_parameters():
                 if name in model.param_proposal:
                     gradient = param.data - model.cloud_params[name]
                     param.data = model.cloud_params[name] + D * gradient

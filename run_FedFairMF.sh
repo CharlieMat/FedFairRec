@@ -25,55 +25,60 @@ DIM=32;
 
 rho=1;
 group='activity';
+lambda=1.0;
+sigma=1.0;
 
 DEVICE_DROPOUT=0.1;
 ELASTIC_MU=0.01;
 FED_TYPE="fedavg";
-FED_BETA=0.5;
+FED_BETA=1.0;
 N_LOCAL_STEP=3;
 
-for LR in 0.001 #0.0003 0.003
+for LR in 0.001 0.003
 do
-    for lambda in 0.1 #1.0 0 #0.3 1.0 3.0 0.
+    for sigma in 0.1 0 1.0
     do
-        python main.py\
-            --proctitle "Finrir"\
-            --model ${model_name}\
-            --task ${task_name}\
-            --n_round 3\
-            --train_and_eval\
-            --seed 9\
-            --optimizer "SGD"\
-            --cuda ${device}\
-            --n_worker 4\
-            --epoch 30\
-            --batch_size 512\
-            --lr ${LR}\
-            --val_sample_p 0.1\
-            --with_val \
-            --temper 6\
-            --stop_metric ${METRIC}\
-            --model_path ${ROOT}/${data_key}/models/f2rec_Fair${model_name}_lr${LR}_reg${REG}_${LOSS}.pkl\
-            --loss ${LOSS}\
-            --l2_coef ${REG}\
-            --emb_size ${DIM}\
-            --fair_rho ${rho}\
-            --fair_lambda ${lambda}\
-            --fair_group_feature ${group}\
-            --device_dropout_p ${DEVICE_DROPOUT}\
-            --n_local_step ${N_LOCAL_STEP}\
-            --aggregation_func ${FED_TYPE}\
-            --mitigation_trade_off ${FED_BETA}\
-            --elastic_mu ${ELASTIC_MU}\
-            --data_file ${ROOT}/${data_key}/tsv_data/\
-            --user_meta_data ${ROOT}/${data_key}/meta_data/user.meta\
-            --item_meta_data ${ROOT}/${data_key}/meta_data/item.meta\
-            --user_fields_meta_file ${ROOT}/${data_key}/meta_data/user_fields.meta\
-            --item_fields_meta_file ${ROOT}/${data_key}/meta_data/item_fields.meta\
-            --user_fields_vocab_file ${ROOT}/${data_key}/meta_data/user_fields.vocab\
-            --item_fields_vocab_file ${ROOT}/${data_key}/meta_data/item_fields.vocab\
-            --n_neg ${NNEG}\
-            --n_neg_val 100
-    #         > ${ROOT}/${data_key}/logs/fairtrain_and_eval_${model_name}_lr${LR}_reg${REG}_loss${LOSS}_lambda${lambda}.log
+        for lambda in 1.0 0.1 0 #0.3 1.0 3.0 0.
+        do
+            python main.py\
+                --proctitle "Finrir"\
+                --model ${model_name}\
+                --task ${task_name}\
+                --n_round 1\
+                --train_and_eval\
+                --seed 19\
+                --optimizer "SGD"\
+                --cuda ${device}\
+                --n_worker 4\
+                --epoch 40\
+                --lr ${LR}\
+                --val_sample_p 0.5\
+                --with_val \
+                --temper 6\
+                --stop_metric ${METRIC}\
+                --model_path ${ROOT}/${data_key}/models/f2rec_Fair${model_name}_lr${LR}_reg${REG}_loss${LOSS}_lambda${lambda}_sigma${sigma}_g${group}.pkl\
+                --loss ${LOSS}\
+                --l2_coef ${REG}\
+                --emb_size ${DIM}\
+                --fair_rho ${rho}\
+                --fair_lambda ${lambda}\
+                --fair_group_feature ${group}\
+                --fair_noise_sigma ${sigma}\
+                --device_dropout_p ${DEVICE_DROPOUT}\
+                --n_local_step ${N_LOCAL_STEP}\
+                --aggregation_func ${FED_TYPE}\
+                --mitigation_trade_off ${FED_BETA}\
+                --elastic_mu ${ELASTIC_MU}\
+                --data_file ${ROOT}/${data_key}/tsv_data/\
+                --user_meta_data ${ROOT}/${data_key}/meta_data/user.meta\
+                --item_meta_data ${ROOT}/${data_key}/meta_data/item.meta\
+                --user_fields_meta_file ${ROOT}/${data_key}/meta_data/user_fields.meta\
+                --item_fields_meta_file ${ROOT}/${data_key}/meta_data/item_fields.meta\
+                --user_fields_vocab_file ${ROOT}/${data_key}/meta_data/user_fields.vocab\
+                --item_fields_vocab_file ${ROOT}/${data_key}/meta_data/item_fields.vocab\
+                --n_neg ${NNEG}\
+                --n_neg_val 100\
+                > ${ROOT}/${data_key}/logs/f2rec_train_and_eval_Fair${model_name}_lr${LR}_reg${REG}_loss${LOSS}_lambda${lambda}_sigma${sigma}_g${group}.log
+        done
     done
 done

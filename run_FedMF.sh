@@ -1,10 +1,10 @@
 ROOT="/home/sl1471/workspace/experiments";
 
-# data_key="ml-1m"; # loss: 0.001 0.003 0.01
+data_key="ml-1m"; 
 # data_key="amz_Books";
 # data_key="amz_Electronics";
 # data_key='BX'; #
-data_key='amz_Movies_and_TV';
+# data_key='amz_Movies_and_TV';
 
 # train_file=${ROOT}${data_key}"/tsv_data/train.tsv";
 # val_file=${ROOT}${data_key}"/tsv_data/val.tsv";
@@ -17,23 +17,22 @@ mkdir -p ${ROOT}/${data_key}/logs
 
 task_name="FedTopK";
 METRIC="_AUC";
-device=3;
+device=1;
 
 model_name="FedMF";
-REG=1.0;
 LOSS="pairwisebpr";
 NNEG=1;
 DIM=32;
 DEVICE_DROPOUT=0.1;
 ELASTIC_MU=0.01;
 FED_TYPE="fedavg";
-FED_BETA=1.0
+FED_BETA=1.0;
 
-for REG in 1.0 0.1 
+for REG in 0.1 1.0
 do
     for N_LOCAL_STEP in 1 3 5 #7 5
     do
-        for LR in 0.003 0.01 0.001
+        for LR in 0.003 0.001 0.01 
         do
             python main.py\
                 --proctitle "Baldr"\
