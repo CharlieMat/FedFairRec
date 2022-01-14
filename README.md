@@ -14,7 +14,7 @@ Code environment:
 > conda install -c conda-forge scikit-learn
 > conda install -c conda-forge tqdm 
 > conda install pandas
-> pip install setprotitle
+> conda install setprotitle
 ```
 
 Hardware:

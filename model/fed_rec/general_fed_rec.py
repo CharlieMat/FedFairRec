@@ -242,7 +242,7 @@ class FederatedRecModel(GeneralRecModel):
         if self.loss_type == "regression":
             raise NotImplemented
         else:
-            return {"loss": np.mean(local_loss)}
+            return {"loss": local_loss[-1]}
         
     def local_gradient_manipulation(self, local_info):
         '''

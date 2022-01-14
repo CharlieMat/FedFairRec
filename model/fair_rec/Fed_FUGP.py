@@ -56,7 +56,7 @@ class Fed_FUGP(FairUserGroupPerformance):
                                     for uid in range(reader.n_users)} # {uid: [epsilon(G0,uid),epsilon(G1,uid),...]}
         self.personal_count_noise = {uid: np.random.randn(len(self.feature_values)) * self.fair_noise_sigma \
                                     for uid in range(reader.n_users)} # {uid: [epsilon(G0,uid),epsilon(G1,uid),...]}
-        self.observation = {'D': {v: [] for v in self.feature_values}}
+        self.observation = {'D': {v: [0] for v in self.feature_values}}
         
     def reset_statistics(self):
         # sufficient statistics of feature_values: sum and count of each group value
@@ -174,10 +174,11 @@ class Fed_FUGP(FairUserGroupPerformance):
                     # download domain-specific mapping models to personal spaces
                     model.download_cloud_params(local_info)
                     out_dict = model.forward(feed_dict, return_prob = True)
-                    pos_probs, neg_probs = out_dict["probs"], out_dict["neg_probs"]
+#                     pos_probs, neg_probs = out_dict["probs"], out_dict["neg_probs"]
                     # metrics
-                    user_report = get_user_eval(pos_probs.view(-1), neg_probs.view(-1), at_k_list)
-                    self.upload_fairness_statistics({'device': uid, 'group': G,
+#                     user_report = get_user_eval(pos_probs.view(-1), neg_probs.view(-1), at_k_list)
+                    self.upload_fairness_statistics({'device': uid, 'group': G, 
+#                                                      'performance': (1.-loss.item())})
                                                      'performance': user_report[selected_metric]})
         print(f"#dropout device during fairness evaluation: {dropout_count}")
                     

@@ -202,7 +202,10 @@ class FairUserGroupPerformance(GeneralModelFairness):
                 scalar = self.fair_lambda * C * (abs(A-B) ** (self.fair_rho - 1))
                 group_difference += scalar
         fair_loss = - loss * (group_difference / len(self.feature_values))
+        self.statistics['sum'][G] += 1.-loss.item()
+        self.statistics['count'][G] += 1
         return {'fair_loss': fair_loss}
+    
     
     def add_fairness_evaluation(self, model, params, method = 'diff'):
         '''
@@ -235,9 +238,10 @@ class FairUserGroupPerformance(GeneralModelFairness):
                     # predict
                     feed_dict = model.wrap_batch(batch_data)
                     out_dict = model.forward(feed_dict, return_prob = True)
-                    pos_probs, neg_probs = out_dict["probs"], out_dict["neg_probs"]
+#                     loss = model.get_loss(wrapped_batch, out_dict)
+#                     pos_probs, neg_probs = out_dict["probs"], out_dict["neg_probs"]
                     # metrics
-                    user_report = get_user_eval(pos_probs.view(-1), neg_probs.view(-1), at_k_list)
+#                     user_report = get_user_eval(pos_probs.view(-1), neg_probs.view(-1), at_k_list)
 #                     ranking_report = calculate_ranking_metric(pos_probs.view(-1), neg_probs.view(-1), at_k_list)
                     # record evaluation info for user groups of each selected field
 #                     for metric,val in ranking_report.items():
@@ -246,9 +250,9 @@ class FairUserGroupPerformance(GeneralModelFairness):
 #                         else:
 #                             report[group_name][G][metric] = (report[group_name][G][metric][0] + val, 
 #                                                              report[group_name][G][metric][1] + 1) 
-            #         self.statistics['sum'][G] += (1. - loss.item())
-                    self.statistics['sum'][G] += user_report[selected_metric]
-                    self.statistics['count'][G] += 1
+#                     self.statistics['sum'][G] += (1. - loss.item())
+#                     self.statistics['sum'][G] += user_report[selected_metric]
+#                     self.statistics['count'][G] += 1
         # aggregate each metric
         # {"user_group_xxx": {feature_value: {metric: (value_sum, value_count)}}}
         # --> {"user_group_xxx": {feature_value: {metric: value_sum / value_count}}}

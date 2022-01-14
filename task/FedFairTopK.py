@@ -101,7 +101,8 @@ class FedFairTopK(FedTopK):
             
             # upload updated domain-specific mapping models to the cloud of each domain
             model.upload_edge_params(local_info)
-#             self.fair_controller.upload_fairness_statistics(local_info)
+            local_info['performance'] = 1. - local_response["loss"]
+            self.fair_controller.upload_fairness_statistics(local_info)
             
         model.download_cloud_params(None) # synchronize parameter for model saving
         print(f"#dropout device: {dropout_count}")
@@ -183,9 +184,11 @@ class FedFairTopK(FedTopK):
                         report[k] += v
                     n_user_tested += 1
                     # fairness eval
-                    uid = batch_data["user_UserID"].reshape(-1).detach().cpu().numpy()[0]
-                    self.fair_controller.upload_fairness_statistics({'device': uid, 
-                                                                     'performance': user_report[self.stop_metric]})
+#                     uid = batch_data["user_UserID"].reshape(-1).detach().cpu().numpy()[0]
+#                     loss = model.get_loss(feed_dict, out_dict)
+#                     self.fair_controller.upload_fairness_statistics({'device': uid, 
+#                                                                      'performance': 1. - loss.item()})
+#                                                                      'performance': user_report[self.stop_metric]})
         print(f"#dropout device during evaluation: {dropout_count}")
         # recommendation
         for key, value in report.items():

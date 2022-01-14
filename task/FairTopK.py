@@ -102,10 +102,10 @@ class FairTopK(TopK):
         else: # ranking evaluation
             report = self.evaluate_userwise_ranking(model)
 #             if model.reader.phase == "test":
-            params = {'selected_metric': self.stop_metric, 'at_k_list': self.at_k_list, 'eval_sample_p': self.eval_sample_p}
-            fairness_report = self.fair_controller.add_fairness_evaluation(model, params)
-            for k,v in fairness_report.items():
-                report["fair_" + k] = v
+#             params = {'selected_metric': self.stop_metric, 'at_k_list': self.at_k_list, 'eval_sample_p': self.eval_sample_p}
+#             fairness_report = self.fair_controller.add_fairness_evaluation(model, params)
+#             for k,v in fairness_report.items():
+#                 report["fair_" + k] = v
         print("Result dict:")
         print(str(report))
         return report
