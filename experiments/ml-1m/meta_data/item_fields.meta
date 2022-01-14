@@ -1,0 +1,4 @@
+field_name	field_type	value_type	field_enc
+ItemID	nominal	int	v2id
+Year	ordinal	int	v2id
+Genre	nominal	str	v2onehot

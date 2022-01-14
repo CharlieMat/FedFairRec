@@ -1,0 +1,6 @@
+field_name	field_type	value_type	field_enc
+UserID	nominal	int	v2id
+Gender	nominal	str	v2id
+Age	nominal	int	v2id
+Occupation	nominal	int	v2id
+ZipArea	nominal	int	v2id
