@@ -1,0 +1,6 @@
+field_name	field_type	value_type	field_enc	vocab_key
+ItemID	nominal	str	v2id	ItemID
+Category	nominal	str	v2onehot	Category
+MinPrice	ordinal	int	v2id	MinPrice
+MaxPrice	ordinal	int	v2id	MaxPrice
+Brand	nominal	str	v2id	Brand
