@@ -14,8 +14,8 @@ mkdir -p ${ROOT}/${data_key}/models
 mkdir -p ${ROOT}/${data_key}/logs
 
 task_name="FedFairTopK";
-METRIC="_AUC";
-device=2;
+METRIC="_NDCG@50";
+device=1;
 
 model_name="FedMF";
 REG=1.0;
@@ -25,8 +25,6 @@ DIM=32;
 
 rho=1;
 group='activity';
-lambda=1.0;
-sigma=1.0;
 
 DEVICE_DROPOUT=0.1;
 ELASTIC_MU=0.01;
@@ -34,11 +32,11 @@ FED_TYPE="fedavg";
 FED_BETA=1.0;
 N_LOCAL_STEP=3;
 
-for LR in 0.001 0.003
+for LR in 0.003 0.001
 do
-    for sigma in 0.1 0 1.0
+    for sigma in 0 0.3 1.0
     do
-        for lambda in 1.0 0.1 0 #0.3 1.0 3.0 0.
+        for lambda in 0 1.0 3.0 #0.3 1.0 3.0 0.
         do
             python main.py\
                 --proctitle "Finrir"\
@@ -52,7 +50,7 @@ do
                 --n_worker 4\
                 --epoch 40\
                 --lr ${LR}\
-                --val_sample_p 0.5\
+                --val_sample_p 1.0\
                 --with_val \
                 --temper 6\
                 --stop_metric ${METRIC}\

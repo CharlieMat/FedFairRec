@@ -19,6 +19,8 @@ from task.TopK import init_ranking_report, calculate_ranking_metric
 from task.FedTopK import FedTopK
 from model.fair_rec.Fed_FUGP import Fed_FUGP
 
+
+
 class FedFairTopK(FedTopK):
     
     @staticmethod
@@ -99,7 +101,7 @@ class FedFairTopK(FedTopK):
             
             # upload updated domain-specific mapping models to the cloud of each domain
             model.upload_edge_params(local_info)
-            self.fair_controller.upload_fairness_statistics(local_info)
+#             self.fair_controller.upload_fairness_statistics(local_info)
             
         model.download_cloud_params(None) # synchronize parameter for model saving
         print(f"#dropout device: {dropout_count}")
@@ -123,6 +125,10 @@ class FedFairTopK(FedTopK):
             raise NotImplemented
         else: # ranking evaluation
             report = self.evaluate_userwise_ranking(model)
+#             params = {'selected_metric': self.stop_metric, 'at_k_list': self.at_k_list, 'eval_sample_p': self.eval_sample_p}
+#             fairness_report = self.fair_controller.add_fairness_evaluation(model, params)
+#             for k,v in fairness_report.items():
+#                 report["fair_" + k] = v
         print("Result dict:")
         print(str(report))
         return report
@@ -154,6 +160,7 @@ class FedFairTopK(FedTopK):
                                  num_workers = eval_data.n_worker)
         report = init_ranking_report(self.at_k_list)
         n_user_tested = 0
+        dropout_count = 0
 #         model.keep_cloud_params() # store parameters on central server
         with torch.no_grad():
             for i, batch_data in enumerate(eval_loader):
@@ -162,15 +169,31 @@ class FedFairTopK(FedTopK):
                     feed_dict = model.wrap_batch(batch_data)
                     # download domain-specific mapping models to personal spaces
                     local_info = model.get_local_info(feed_dict, {'epoch':0, 'lr': 0.})
+                    # imitate user dropout in FL (e.g. connection lost or no response)
+                    if model.do_device_dropout(local_info):
+                        dropout_count += 1
+                        continue
                     model.download_cloud_params(local_info) 
                     # predict
                     out_dict = model.forward(feed_dict, return_prob = True)
                     pos_probs, neg_probs = out_dict["probs"].view(-1), out_dict["neg_probs"].view(-1)
                     # metrics
-                    calculate_ranking_metric(pos_probs, neg_probs, self.at_k_list, report)
+                    user_report = calculate_ranking_metric(pos_probs, neg_probs, self.at_k_list, {})
+                    for k,v in user_report.items():
+                        report[k] += v
                     n_user_tested += 1
+                    # fairness eval
+                    uid = batch_data["user_UserID"].reshape(-1).detach().cpu().numpy()[0]
+                    self.fair_controller.upload_fairness_statistics({'device': uid, 
+                                                                     'performance': user_report[self.stop_metric]})
+        print(f"#dropout device during evaluation: {dropout_count}")
+        # recommendation
         for key, value in report.items():
             report[key] /= n_user_tested
+        # fairness
+        fairness_report = self.fair_controller.get_eval()
+        for k,v in fairness_report.items():
+            report['fair_' + k] = v
         return report
 
 

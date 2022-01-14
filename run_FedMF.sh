@@ -17,7 +17,7 @@ mkdir -p ${ROOT}/${data_key}/logs
 
 task_name="FedTopK";
 METRIC="_AUC";
-device=1;
+device=2;
 
 model_name="FedMF";
 LOSS="pairwisebpr";
@@ -30,9 +30,9 @@ FED_BETA=1.0;
 
 for REG in 0.1 1.0
 do
-    for N_LOCAL_STEP in 1 3 5 #7 5
+    for N_LOCAL_STEP in 1 3
     do
-        for LR in 0.003 0.001 0.01 
+        for LR in 0.003 0.001 0.0003 0.0001
         do
             python main.py\
                 --proctitle "Baldr"\

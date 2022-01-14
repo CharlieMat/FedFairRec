@@ -2,15 +2,13 @@ ROOT="/home/sl1471/workspace/experiments";
 
 data_key="ml-1m";
 # data_key="amz_Books";
-# data_key="amz_Electronics";
 # data_key="amz_Movies_and_TV";
-# data_key='BX';
 
 mkdir -p ${ROOT}/${data_key}/models
 mkdir -p ${ROOT}/${data_key}/logs
 
 task_name="FairTopK";
-METRIC="_AUC";
+METRIC="_NDCG@50";
 device=2;
 
 model_name="MF";
@@ -20,21 +18,20 @@ NNEG=1;
 DIM=32;
 
 rho=1;
-lambda=0.1;
 
-for LR in 0.00001 0.000003 # 0.0001
+for LR in 0.00001 0.000003 0.00003 # 0.0001
 do
-    for group in 'Gender' 'Age' 'activity' 
+    for group in 'Gender' 'Age'
     do
-        for lambda in 0.1
+        for lambda in 1.0 3.0
         do
             python main.py\
                 --proctitle "Thor"\
                 --model ${model_name}\
                 --task ${task_name}\
-                --n_round 2\
+                --n_round 1\
                 --train_and_eval\
-                --seed 9\
+                --seed 19\
                 --optimizer "Adam"\
                 --cuda ${device}\
                 --n_worker 4\

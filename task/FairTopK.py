@@ -74,7 +74,8 @@ class FairTopK(TopK):
             out_dict = model.forward(wrapped_batch)
             loss = model.get_loss(wrapped_batch, out_dict)
             if self.fair_controller.get_fairness_opt_type() == "inepoch":
-                fair_out = self.fair_controller.do_in_epoch(model, {'batch': wrapped_batch, 'output': out_dict, 'loss': loss})
+                fair_out = self.fair_controller.do_in_epoch(model, {'batch': wrapped_batch, 'output': out_dict, 
+                                                                    'loss': loss, 'metric': self.stop_metric})
                 loss = loss + fair_out['fair_loss'] # add fairness loss in training
             step_loss.append(loss.item())
             loss.backward()
@@ -101,11 +102,10 @@ class FairTopK(TopK):
         else: # ranking evaluation
             report = self.evaluate_userwise_ranking(model)
 #             if model.reader.phase == "test":
-#                 params = {'selected_metric': self.stop_metric, 'at_k_list': self.at_k_list, 'eval_sample_p': self.eval_sample_p}
-#                 fairness_report = self.fair_controller.add_fairness_evaluation(model, params)
-#                 for k,v in fairness_report.items():
-#                     report["fair_" + k] = v
-#                 report[self.stop_metric] += self.stop_metric_sign * fairness_report[self.stop_metric]
+            params = {'selected_metric': self.stop_metric, 'at_k_list': self.at_k_list, 'eval_sample_p': self.eval_sample_p}
+            fairness_report = self.fair_controller.add_fairness_evaluation(model, params)
+            for k,v in fairness_report.items():
+                report["fair_" + k] = v
         print("Result dict:")
         print(str(report))
         return report
