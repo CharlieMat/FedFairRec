@@ -83,6 +83,8 @@ class FedFairTopK(FedTopK):
                 self.show_batch(wrapped_batch)
             # obtain user's local training information, one user each batch
             local_info = model.get_local_info(wrapped_batch, {'epoch':epoch_id, 'lr': self.lr})
+            if self.fair_controller.get_fairness_opt_type() == "inepoch":
+                local_info['lr'] *= self.fair_controller.get_D(local_info)
             
             # imitate user dropout in FL (e.g. connection lost or no response)
             if model.do_device_dropout(local_info):
@@ -94,8 +96,8 @@ class FedFairTopK(FedTopK):
             
             # local optimization
             local_response = model.local_optimize(wrapped_batch, local_info) 
-            if self.fair_controller.get_fairness_opt_type() == "inepoch":
-                self.fair_controller.do_in_epoch(model, local_info) # fairness regularization
+#             if self.fair_controller.get_fairness_opt_type() == "inepoch":
+#                 self.fair_controller.do_in_epoch(model, local_info) # fairness regularization
             step_loss.append(local_response["loss"])
             local_info['loss'] = local_response["loss"]
             
