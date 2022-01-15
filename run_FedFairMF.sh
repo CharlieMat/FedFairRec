@@ -1,8 +1,8 @@
 ROOT="/home/sl1471/workspace/experiments";
 
 # data_key="ml-1m";
-data_key="amz_Books";
-# data_key='amz_Movies_and_TV';
+# data_key="amz_Books";
+data_key='amz_Movies_and_TV';
 
 # train_file=${ROOT}${data_key}"/tsv_data/train.tsv";
 # val_file=${ROOT}${data_key}"/tsv_data/val.tsv";

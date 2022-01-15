@@ -14,7 +14,7 @@ mkdir -p ${ROOT}/${data_key}/models
 mkdir -p ${ROOT}/${data_key}/logs
 
 task_name="FedTopK";
-METRIC="_AUC";
+METRIC="_NDCG@50";
 device=0;
 
 model_name="FedMF";
@@ -30,7 +30,7 @@ for REG in 1.0
 do
     for N_LOCAL_STEP in 1
     do
-        for LR in 0.01 0.1 0.003
+        for LR in 0.03 0.01
         do
             python main.py\
                 --proctitle "Baldr"\
