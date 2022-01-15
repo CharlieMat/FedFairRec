@@ -1,8 +1,8 @@
 ROOT="/home/sl1471/workspace/experiments";
 
 # data_key="ml-1m";
-# data_key="amz_Books";
-data_key='amz_Movies_and_TV';
+data_key="amz_Books";
+# data_key='amz_Movies_and_TV';
 
 # train_file=${ROOT}${data_key}"/tsv_data/train.tsv";
 # val_file=${ROOT}${data_key}"/tsv_data/val.tsv";
@@ -15,7 +15,7 @@ mkdir -p ${ROOT}/${data_key}/logs
 
 task_name="FedFairTopK";
 METRIC="_NDCG@50";
-device=1;
+device=3;
 
 model_name="FedMF";
 REG=1.0;
@@ -30,16 +30,16 @@ DEVICE_DROPOUT=0.1;
 ELASTIC_MU=0.01;
 FED_TYPE="fedavg";
 FED_BETA=1.0;
-N_LOCAL_STEP=3;
+N_LOCAL_STEP=1;
 
-for LR in 0.003 0.001
+for LR in 0.03 0.01
 do
-    for sigma in 0 0.3 1.0
+    for sigma in 0 1.0 0.3
     do
-        for lambda in 0 1.0 3.0 #0.3 1.0 3.0 0.
+        for lambda in -0.1 0 0.1 1.0
         do
             python main.py\
-                --proctitle "Finrir"\
+                --proctitle "Freyr"\
                 --model ${model_name}\
                 --task ${task_name}\
                 --n_round 1\

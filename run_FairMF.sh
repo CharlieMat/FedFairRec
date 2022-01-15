@@ -19,11 +19,11 @@ DIM=32;
 
 rho=1;
 
-for LR in 0.00001 0.000003 0.00003 # 0.0001
+for LR in 0.00003 0.00001 
 do
-    for group in 'Gender' 'Age'
+    for group in 'activity' 'Gender' 'Age'
     do
-        for lambda in 1.0 3.0
+        for lambda in -0.1 0 0.1 1.0
         do
             python main.py\
                 --proctitle "Thor"\
@@ -37,7 +37,7 @@ do
                 --n_worker 4\
                 --epoch 30\
                 --lr ${LR}\
-                --val_sample_p 0.5\
+                --val_sample_p 1.0\
                 --with_val \
                 --temper 6\
                 --stop_metric ${METRIC}\
