@@ -1,7 +1,7 @@
 ROOT="/home/sl1471/workspace/experiments";
 
-# data_key="ml-1m"; 
-data_key="amz_Books";
+data_key="ml-1m"; 
+# data_key="amz_Books";
 # data_key='amz_Movies_and_TV';
 
 # train_file=${ROOT}${data_key}"/tsv_data/train.tsv";
@@ -15,7 +15,7 @@ mkdir -p ${ROOT}/${data_key}/logs
 
 task_name="FedTopK";
 METRIC="_NDCG@50";
-device=0;
+device=2;
 
 model_name="FedMF";
 LOSS="pairwisebpr";
@@ -26,17 +26,17 @@ ELASTIC_MU=0.01;
 FED_TYPE="fedavg";
 FED_BETA=1.0;
 
-for REG in 1.0
+for REG in 0.1
 do
     for N_LOCAL_STEP in 1
     do
-        for LR in 0.1
+        for LR in 0.003 0.01
         do
             python main.py\
                 --proctitle "Baldr"\
                 --model ${model_name}\
                 --task ${task_name}\
-                --n_round 1\
+                --n_round 2\
                 --train_and_eval\
                 --seed 19\
                 --optimizer "SGD"\
@@ -44,7 +44,7 @@ do
                 --n_worker 4\
                 --epoch 40\
                 --lr ${LR}\
-                --val_sample_p 0.5\
+                --val_sample_p 0.8\
                 --with_val \
                 --temper 6\
                 --stop_metric ${METRIC}\

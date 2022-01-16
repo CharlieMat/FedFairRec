@@ -15,7 +15,7 @@ mkdir -p ${ROOT}/${data_key}/logs
 
 task_name="FedFairTopK";
 METRIC="_NDCG@50";
-device=3;
+device=1;
 
 model_name="FedMF";
 REG=1.0;
@@ -34,9 +34,9 @@ N_LOCAL_STEP=1;
 
 for LR in 0.03 0.01
 do
-    for sigma in 0 1.0 0.3
+    for sigma in 0 1.0
     do
-        for lambda in -0.1 0 0.1 1.0
+        for lambda in -0.1 0 0.1 0.3 0.5 0.7 0.9
         do
             python main.py\
                 --proctitle "Freyr"\

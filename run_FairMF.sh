@@ -23,7 +23,7 @@ for LR in 0.00003
 do
     for group in 'activity'
     do
-        for lambda in -0.1 0 0.1 0.5 1.0
+        for lambda in 0.1 0.3 0.5 0.7 0.9 -0.1 -0.3 -0.5 -0.7
         do
             python main.py\
                 --proctitle "Thor"\
