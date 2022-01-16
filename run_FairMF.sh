@@ -19,11 +19,11 @@ DIM=32;
 
 rho=1;
 
-for LR in 0.00003 0.00001 
+for LR in 0.00003
 do
-    for group in 'activity' 'Gender' 'Age'
+    for group in 'activity'
     do
-        for lambda in -0.1 0 0.1 1.0
+        for lambda in -0.1 0 0.1 0.5 1.0
         do
             python main.py\
                 --proctitle "Thor"\
@@ -31,7 +31,7 @@ do
                 --task ${task_name}\
                 --n_round 1\
                 --train_and_eval\
-                --seed 19\
+                --seed 29\
                 --optimizer "Adam"\
                 --cuda ${device}\
                 --n_worker 4\

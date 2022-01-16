@@ -30,7 +30,7 @@ for REG in 1.0
 do
     for N_LOCAL_STEP in 1
     do
-        for LR in 0.03 0.01
+        for LR in 0.1
         do
             python main.py\
                 --proctitle "Baldr"\

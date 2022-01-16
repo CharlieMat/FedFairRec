@@ -97,7 +97,9 @@ class FedMF(FederatedRecModel):
 #                 print(name)
 #                 print(self.cloud_params[name])
                 if name == 'global_bias':
-                    self.cloud_params[name] = self.param_proposal[name] / self.param_proposal_count[name].view(-1)
+                    sum_grad = self.param_proposal[name] - self.cloud_params[name] * self.param_proposal_count[name].view(-1)
+                    self.cloud_params[name] = self.cloud_params[name] + self.mitigation_beta * sum_grad
+#                     self.cloud_params[name] = self.param_proposal[name] / self.param_proposal_count[name].view(-1)
                 elif name in self.param_proposal:
 #                     agg = self.cloud_params[name] * (1-self.mitigation_alpha) + \
 #                             self.param_proposal[name] * self.mitigation_alpha / self.param_proposal_count[name].view(-1,1)

@@ -57,25 +57,28 @@ class Fed_FUGP(FairUserGroupPerformance):
         self.personal_count_noise = {uid: np.random.randn(len(self.feature_values)) * self.fair_noise_sigma \
                                     for uid in range(reader.n_users)} # {uid: [epsilon(G0,uid),epsilon(G1,uid),...]}
 #         self.observation = {'D': {v: [1.] for v in self.feature_values}}
-        self.D = {v: 1. for v in self.feature_values}
+#         self.D = {v: 1 + np.random.random() for v in self.feature_values}
         
-    def reset_statistics(self):
-        # sufficient statistics of feature_values: sum and count of each group value
-        super().reset_statistics()
+#     def reset_statistics(self):
+#         # sufficient statistics of feature_values: sum and count of each group value
+#         super().reset_statistics()
         
-#         for term, obs in self.observation.items():
-#             print(term)
-#             for G, G_obs in obs.items():
-#                 print(f"{G}:{np.mean(G_obs)}")
-        for G,A in self.D.items():
-            group_difference = []
-            for v,B in self.prev_statistics.items():
-                if v != G:
-                    C = self.fair_rho if A > B else -self.fair_rho if A < B else 0
-                    scalar = self.fair_lambda * C * (abs(A-B) ** (self.fair_rho - 1))
-                    group_difference.append(scalar)
-            self.D[G] = 1 - np.mean(group_difference)
-        print(f'D:{self.D}')
+# #         for term, obs in self.observation.items():
+# #             print(term)
+# #             for G, G_obs in obs.items():
+# #                 print(f"{G}:{np.mean(G_obs)}")
+
+#         for G,A in self.prev_statistics.items():
+#             group_difference = []
+#             for v,B in self.prev_statistics.items():
+#                 if v != G:
+#                     C = self.fair_rho if A > B else -self.fair_rho if A < B else 0
+#                     scalar = self.fair_lambda * C * (abs(A-B) ** (self.fair_rho - 1))
+#                     group_difference.append(scalar)
+# #                     print(v,A,B,scalar)
+#             self.D[G] = 1 - np.sum(group_difference)
+#         print(f'D:{self.D}')
+#         input()
         
     def log(self):
         super().log()

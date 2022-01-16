@@ -161,6 +161,7 @@ class FairUserGroupPerformance(GeneralModelFairness):
         self.prev_statistics = {v: np.random.random() for v in self.feature_values}
         self.statistics = {"sum": {v: 0.5 for v in self.feature_values}, 
                            "count": {v: 1 for v in self.feature_values}}
+        self.D = {v: 1 + np.random.random() for v in self.feature_values}
         
         
     def reset_statistics(self):
@@ -170,6 +171,16 @@ class FairUserGroupPerformance(GeneralModelFairness):
         print(f"Previous statistics:\n{self.prev_statistics}")
         self.statistics = {"sum": {v: 0. for v in self.feature_values}, 
                            "count": {v: 0 for v in self.feature_values}}
+        for G,A in self.prev_statistics.items():
+            group_difference = []
+            for v,B in self.prev_statistics.items():
+                if v != G:
+                    C = self.fair_rho if A > B else -self.fair_rho if A < B else 0
+                    scalar = self.fair_lambda * C * (abs(A-B) ** (self.fair_rho - 1))
+                    group_difference.append(scalar)
+#                     print(v,A,B,scalar)
+            self.D[G] = 1 - np.sum(group_difference)
+        print(f'D:{self.D}')
         
     def get_eval(self):
         S = []
@@ -194,14 +205,15 @@ class FairUserGroupPerformance(GeneralModelFairness):
         if uid not in self.group_dict:
             return 0
         G = self.group_dict[uid] # the user's group
-        A = self.prev_statistics[G] # previous statistics of all groups
-        group_difference = 0.
-        for v,B in self.prev_statistics.items():
-            if v != G:
-                C = self.fair_rho if A > B else -self.fair_rho
-                scalar = self.fair_lambda * C * (abs(A-B) ** (self.fair_rho - 1))
-                group_difference += scalar
-        fair_loss = - loss * (group_difference / len(self.feature_values))
+#         A = self.prev_statistics[G] # previous statistics of all groups
+#         group_difference = 0.
+#         for v,B in self.prev_statistics.items():
+#             if v != G:
+#                 C = self.fair_rho if A > B else -self.fair_rho
+#                 scalar = self.fair_lambda * C * (abs(A-B) ** (self.fair_rho - 1))
+#                 group_difference += scalar
+#         fair_loss = - loss * (group_difference / len(self.feature_values))
+        fair_loss = loss * (self.D[G] - 1)
         self.statistics['sum'][G] += 1.-loss.item()
         self.statistics['count'][G] += 1
         return {'fair_loss': fair_loss}
