@@ -7,6 +7,9 @@ import time
 import torch
 import random
 
+import matplotlib.pyplot as plt
+from argparse import Namespace
+
 def set_random_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
@@ -132,6 +135,7 @@ def extract_results(log_root_path, customized_args = [], file_name_identifier = 
     result_dict = {}
     for j,file in tqdm(enumerate(os.listdir(log_root_path))):
         if file.endswith(".log") and file_name_identifier in file:
+            print(file)
             args = None
             model_name = ""
             results = []
@@ -164,11 +168,55 @@ def extract_results(log_root_path, customized_args = [], file_name_identifier = 
                     result_dict[j][k] = v
     return result_dict
 
+def read_line_number(file_path, line_num):
+    with open(file_path, 'r') as fin:
+        for i,line in enumerate(fin):
+            if i == line_num:
+                return line.strip()
+    return ""
+
+def extract_args(log_path):
+    print(log_path)
+    argstr = read_line_number(log_path, 1)
+    if 'fair_lambda' not in argstr:
+        argstr = argstr[:-1] + ', fair_lambda=0.1)'
+    if 'fair_rho' not in argstr:
+        argstr = argstr[:-1] + ', fair_rho=1)'
+    if 'fair_group_feature' not in argstr:
+        argstr = argstr[:-1] + f", fair_group_feature='{group_feature}')"
+    args = eval(argstr)
+    return args
+
+def extract_epochwise_result(log_path, keyword = 'Result dict:', next_line = True):
+    '''
+    @output:
+    - round_result: [epoch_result]
+        - epoch_result: {metric: value}
+    '''
+    round_result = []
+    wait_flag, read_flag = False, False
+    with open(log_path, 'r') as fin:
+        for i,line in enumerate(fin):
+            if 'Epoch ' in line:
+                wait_flag = True # wait for keyward
+            elif keyword == line[:len(keyword)]:
+                if wait_flag: # read next line
+                    read_flag = True
+                    wait_flag = False
+                    if not next_line:
+                        read_flag = False
+                        round_result.append(eval(line.strip()[len(keyword):]))
+                else: # not training process, stop and save
+                    break
+            elif read_flag:
+                read_flag = False
+                round_result.append(eval(line))
+    return round_result
+
 ####################################################################
 #                               Plot                               #
 ####################################################################
 
-import matplotlib.pyplot as plt
 
 def plot_ordinal_statistics(stats, features, ncol = 3):
     '''
@@ -189,4 +237,32 @@ def plot_ordinal_statistics(stats, features, ncol = 3):
         plt.title(field)
         scale = 1e-7 + np.max(Y) - np.min(Y)
         plt.ylim(np.min(Y) - scale * 0.05, np.max(Y) + scale * 0.05)
+    plt.show()
+
+def plot_multiple_line(stats, features, ncol = 2, row_height = 4,
+                       ylabel = 'y', xlabel = 'x', legend_title = ''):
+    '''
+    @input:
+    - stats: {field_name: {key: [values]}}
+    - features: [field_name]
+    - ncol: number of subplots in each row
+    '''
+    assert ncol > 0
+    N = len(features)
+    fig_height = 12 // ncol if len(features) == 1 else row_height*((N-1)//ncol+1)
+    plt.figure(figsize = (16, fig_height))
+    for i,field in enumerate(features):
+        plt.subplot((N-1)//ncol+1,ncol,i+1)
+        minY,maxY = float('inf'),float('-inf')
+        for key, value_list in stats[field].items():
+#             print(key, value_list)
+            X = np.arange(1,len(value_list)+1)
+            minY,maxY = min(minY,min(value_list)),max(maxY,max(value_list))
+            plt.plot(X,value_list,label = key)
+        plt.ylabel(ylabel)
+        plt.xlabel(xlabel)
+        plt.title(field)
+        scale = 1e-4 + maxY - minY
+        plt.ylim(minY - scale * 0.05, maxY + scale * 0.05)
+        plt.legend(title = legend_title)
     plt.show()
