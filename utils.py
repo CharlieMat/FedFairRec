@@ -194,7 +194,7 @@ def extract_epochwise_result(log_path, keyword = 'Result dict:', next_line = Tru
         - epoch_result: {metric: value}
     '''
     round_result = []
-    wait_flag, read_flag = False, False
+    wait_flag, read_flag = True, False
     with open(log_path, 'r') as fin:
         for i,line in enumerate(fin):
             if 'Epoch ' in line:
@@ -265,4 +265,48 @@ def plot_multiple_line(stats, features, ncol = 2, row_height = 4,
         scale = 1e-4 + maxY - minY
         plt.ylim(minY - scale * 0.05, maxY + scale * 0.05)
         plt.legend(title = legend_title)
+    plt.show()
+    
+    
+def plot_recommendation_over_lambda(stats, lambdas, metrics, other_model_results = {}, 
+                                    row_height = 4, ncol = 3, legend_appear_at = 0, colors = {}):
+    '''
+    @input:
+    - stats: {fair_model_name: {metric: {lambda: [values]}}}
+    - other_model_results: {metric: value}
+    - features: [field_name]
+    - ncol: number of subplots in each row
+    '''
+    assert ncol > 0
+    N = len(metrics)
+    X = lambdas
+    fig_height = 12 // ncol if len(metrics) == 1 else row_height*((N-1)//ncol+1)
+    plt.figure(figsize = (16, fig_height))
+    for i,field in enumerate(metrics):
+        plt.subplot((N-1)//ncol+1,ncol,i+1)
+        minY, maxY = float('inf'), float('-inf')
+        for fair_model_name, model_stats in stats.items():
+            Y = np.array(model_stats[field])
+            minY, maxY = min(minY, min(Y)), max(maxY, max(Y))
+            if legend_appear_at == i:
+                c = colors[fair_model_name] if fair_model_name in colors else '#ababab'
+                plt.plot(X, Y, label = fair_model_name, color = c)
+            else:
+                c = colors[fair_model_name] if fair_model_name in colors else '#ababab'
+                plt.plot(X, Y, color = c)
+        for other_model_name, model_stats in other_model_results.items():
+            Y = np.array([model_stats[field]] * len(X))
+            minY, maxY = min(minY, min(Y)), max(maxY, max(Y))
+            if legend_appear_at == i:
+                c = colors[other_model_name] if other_model_name in colors else '#ababab'
+                plt.plot(X, Y, ':', label = other_model_name, color = c)
+            else:
+                c = colors[other_model_name] if other_model_name in colors else '#ababab'
+                plt.plot(X, Y, ':', color = c)
+        plt.title(field)
+#         plt.xticks(X)
+        if legend_appear_at == i:
+            plt.legend()
+        scale = 1e-7 + maxY - minY
+        plt.ylim(minY - scale * 0.05, maxY + scale * 0.05)
     plt.show()
