@@ -2,9 +2,10 @@
 from tqdm import tqdm
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor
-from tqdm_multi_thread import TqdmMultiThreadFactory
 import numpy as np
 import time
+
+ROOT="~/workspace" # change this to your own directory
 
 def build_vocab(df, save_path, column_names):
     with open(save_path, 'w') as fout:

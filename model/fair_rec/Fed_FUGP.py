@@ -56,42 +56,25 @@ class Fed_FUGP(FairUserGroupPerformance):
                                     for uid in range(reader.n_users)} # {uid: [epsilon(G0,uid),epsilon(G1,uid),...]}
         self.personal_count_noise = {uid: np.random.randn(len(self.feature_values)) * self.fair_noise_sigma \
                                     for uid in range(reader.n_users)} # {uid: [epsilon(G0,uid),epsilon(G1,uid),...]}
-#         self.observation = {'D': {v: [1.] for v in self.feature_values}}
-#         self.D = {v: 1 + np.random.random() for v in self.feature_values}
-        
-#     def reset_statistics(self):
-#         # sufficient statistics of feature_values: sum and count of each group value
-#         super().reset_statistics()
-        
-# #         for term, obs in self.observation.items():
-# #             print(term)
-# #             for G, G_obs in obs.items():
-# #                 print(f"{G}:{np.mean(G_obs)}")
-
-#         for G,A in self.prev_statistics.items():
-#             group_difference = []
-#             for v,B in self.prev_statistics.items():
-#                 if v != G:
-#                     C = self.fair_rho if A > B else -self.fair_rho if A < B else 0
-#                     scalar = self.fair_lambda * C * (abs(A-B) ** (self.fair_rho - 1))
-#                     group_difference.append(scalar)
-# #                     print(v,A,B,scalar)
-#             self.D[G] = 1 - np.sum(group_difference)
-#         print(f'D:{self.D}')
-#         input()
         
     def log(self):
         super().log()
         print(f"\tfair_noise_sigma: {self.fair_noise_sigma}")
+
+    def get_D(self, local_info):
+        uid = local_info['device']
+        
+        if uid not in self.group_dict:
+            return 0
+        G = self.group_dict[uid] # the user's group
+        return self.D[G]
     
-#     def do_in_epoch(self, model, batch_info):
+#     def do_in_epoch(self, model, local_info):
 #         '''
-#         fairness_loss = loss * (-lambda * rho * (1 if u in superior group else -1) * |A - B|^{rho-1})
-#         * A = mean_{u in G}(performance of u)
-#         * B = mean_{u in some group other than G}(performance of u)
+#         @input:
+#         - local_info: {'device', 'user', 'item', 'negitem', 'epoch', 'lr'}
 #         '''
-#         uid = batch_info['person']
-#         loss = batch_info['loss']
+#         uid = local_info['device']
         
 #         if uid not in self.group_dict:
 #             return 0
@@ -103,42 +86,14 @@ class Fed_FUGP(FairUserGroupPerformance):
 #                 C = self.fair_rho if A > B else -self.fair_rho
 #                 scalar = self.fair_lambda * C * (abs(A-B) ** (self.fair_rho - 1))
 #                 group_difference += scalar
-#         fair_loss = - loss * (group_difference / len(self.feature_values))
-#         return {'fair_loss': fair_loss}
-
-    def get_D(self, local_info):
-        uid = local_info['device']
-        
-        if uid not in self.group_dict:
-            return 0
-        G = self.group_dict[uid] # the user's group
-        return self.D[G]
-    
-    def do_in_epoch(self, model, local_info):
-        '''
-        @input:
-        - local_info: {'device', 'user', 'item', 'negitem', 'epoch', 'lr'}
-        '''
-        uid = local_info['device']
-        
-        if uid not in self.group_dict:
-            return 0
-        G = self.group_dict[uid] # the user's group
-        A = self.prev_statistics[G] # previous statistics of all groups
-        group_difference = 0.
-        for v,B in self.prev_statistics.items():
-            if v != G:
-                C = self.fair_rho if A > B else -self.fair_rho
-                scalar = self.fair_lambda * C * (abs(A-B) ** (self.fair_rho - 1))
-                group_difference += scalar
-        D = - group_difference / len(self.feature_values) + 1
-        self.observation['D'][G].append(D)
-        # regulate gradient
-        with torch.no_grad():
-            for name, param in model.named_parameters():
-                if name in model.param_proposal:
-                    gradient = param.data - model.cloud_params[name]
-                    param.data = model.cloud_params[name] + D * gradient
+#         D = - group_difference / len(self.feature_values) + 1
+#         self.observation['D'][G].append(D)
+#         # regulate gradient
+#         with torch.no_grad():
+#             for name, param in model.named_parameters():
+#                 if name in model.param_proposal:
+#                     gradient = param.data - model.cloud_params[name]
+#                     param.data = model.cloud_params[name] + D * gradient
     
     def upload_fairness_statistics(self, local_info):
         uid = local_info['device']
@@ -158,61 +113,61 @@ class Fed_FUGP(FairUserGroupPerformance):
                                                 + np.random.randn() * self.fair_noise_sigma
                 self.statistics['count'][G] += 0. + self.personal_count_noise[uid][i]
         
-    def add_fairness_evaluation(self, model, params, method = 'diff'):
-        '''
-        Calculate ranking metrics
+#     def add_fairness_evaluation(self, model, params, method = 'diff'):
+#         '''
+#         Calculate ranking metrics
 
-        @input:
-        - model: GeneralRecModel or its extension
-        - params: {selected_metric, at_k_list, eval_sample_p}
+#         @input:
+#         - model: GeneralRecModel or its extension
+#         - params: {selected_metric, at_k_list, eval_sample_p}
         
-        @output:
-        - resultDict:{"user_group_xxx": {feature_value: {metric: average evaluated value}}}
-        '''
-        selected_metric = params["selected_metric"] if 'selected_metric' in params else "AUC" 
-        at_k_list = params['at_k_list'] if 'at_k_list' in params else [1,10,50]
-        eval_sample_p = params['eval_sample_p'] if 'eval_sample_p' in params else 1.0
+#         @output:
+#         - resultDict:{"user_group_xxx": {feature_value: {metric: average evaluated value}}}
+#         '''
+#         selected_metric = params["selected_metric"] if 'selected_metric' in params else "AUC" 
+#         at_k_list = params['at_k_list'] if 'at_k_list' in params else [1,10,50]
+#         eval_sample_p = params['eval_sample_p'] if 'eval_sample_p' in params else 1.0
         
-        print("Fairness evaluation:")
-        eval_data = model.reader.get_eval_dataset()
-        eval_loader = DataLoader(eval_data, worker_init_fn = worker_init_func,
-                                 batch_size = 1, shuffle = False, pin_memory = False, 
-                                 num_workers = eval_data.n_worker)
+#         print("Fairness evaluation:")
+#         eval_data = model.reader.get_eval_dataset()
+#         eval_loader = DataLoader(eval_data, worker_init_fn = worker_init_func,
+#                                  batch_size = 1, shuffle = False, pin_memory = False, 
+#                                  num_workers = eval_data.n_worker)
         
-        dropout_count = 0
-        with torch.no_grad():
-            for i, batch_data in enumerate(eval_loader):
-                if np.random.random() <= eval_sample_p and "no_item" not in batch_data:
-                    uid = batch_data["user_UserID"].reshape(-1).detach().cpu().numpy()[0]
-                    G = self.group_dict[uid]
-                    # predict
-                    feed_dict = model.wrap_batch(batch_data)
-                    # obtain user's local training information, one user each batch
-                    local_info = model.get_local_info(feed_dict, {})
-                    # imitate user dropout in FL (e.g. connection lost or no response)
-                    if model.do_device_dropout(local_info):
-                        dropout_count += 1
-                        continue
-                    # download domain-specific mapping models to personal spaces
-                    model.download_cloud_params(local_info)
-                    out_dict = model.forward(feed_dict, return_prob = True)
-#                     pos_probs, neg_probs = out_dict["probs"], out_dict["neg_probs"]
-                    # metrics
-#                     user_report = get_user_eval(pos_probs.view(-1), neg_probs.view(-1), at_k_list)
-                    self.upload_fairness_statistics({'device': uid, 'group': G, 
-#                                                      'performance': (1.-loss.item())})
-                                                     'performance': user_report[selected_metric]})
-        print(f"#dropout device during fairness evaluation: {dropout_count}")
+#         dropout_count = 0
+#         with torch.no_grad():
+#             for i, batch_data in enumerate(eval_loader):
+#                 if np.random.random() <= eval_sample_p and "no_item" not in batch_data:
+#                     uid = batch_data["user_UserID"].reshape(-1).detach().cpu().numpy()[0]
+#                     G = self.group_dict[uid]
+#                     # predict
+#                     feed_dict = model.wrap_batch(batch_data)
+#                     # obtain user's local training information, one user each batch
+#                     local_info = model.get_local_info(feed_dict, {})
+#                     # imitate user dropout in FL (e.g. connection lost or no response)
+#                     if model.do_device_dropout(local_info):
+#                         dropout_count += 1
+#                         continue
+#                     # download domain-specific mapping models to personal spaces
+#                     model.download_cloud_params(local_info)
+#                     out_dict = model.forward(feed_dict, return_prob = True)
+# #                     pos_probs, neg_probs = out_dict["probs"], out_dict["neg_probs"]
+#                     # metrics
+# #                     user_report = get_user_eval(pos_probs.view(-1), neg_probs.view(-1), at_k_list)
+#                     self.upload_fairness_statistics({'device': uid, 'group': G, 
+# #                                                      'performance': (1.-loss.item())})
+#                                                      'performance': user_report[selected_metric]})
+#         print(f"#dropout device during fairness evaluation: {dropout_count}")
                     
-        # aggregate each metric
-        # {"user_group_xxx": {feature_value: {metric: (value_sum, value_count)}}}
-        # --> {"user_group_xxx": {feature_value: {metric: value_sum / value_count}}}
-        S = []
-        for i,v0 in enumerate(self.feature_values):
-            for v1 in self.feature_values[i+1:]:
-                S.append(abs(self.statistics['sum'][v0]/self.statistics['count'][v0] - 
-                             self.statistics['sum'][v1]/self.statistics['count'][v1]) ** self.fair_rho)
-        return {f"{self.group_feature}_{selected_metric}": np.mean(S)}
+#         # aggregate each metric
+#         # {"user_group_xxx": {feature_value: {metric: (value_sum, value_count)}}}
+#         # --> {"user_group_xxx": {feature_value: {metric: value_sum / value_count}}}
+#         S = []
+#         for i,v0 in enumerate(self.feature_values):
+#             for v1 in self.feature_values[i+1:]:
+#                 S.append(abs(self.statistics['sum'][v0]/self.statistics['count'][v0] - 
+#                              self.statistics['sum'][v1]/self.statistics['count'][v1]) ** self.fair_rho)
+#         return {f"{self.group_feature}_{selected_metric}": np.mean(S)}
     
     
     

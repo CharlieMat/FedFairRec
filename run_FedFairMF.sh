@@ -32,11 +32,11 @@ FED_TYPE="fedavg";
 FED_BETA=1.0;
 N_LOCAL_STEP=1;
 
-for LR in 0.03 0.01
+for LR in 0.003
 do
-    for sigma in 0 1.0
+    for sigma in 0.001
     do
-        for lambda in -0.1 0 0.1 0.3 0.5 0.7 0.9
+        for lambda in 0.1 0.3 0.5 0.7 0.9 -0.1 -0.3 -0.5 -0.7
         do
             python main.py\
                 --proctitle "Freyr"\

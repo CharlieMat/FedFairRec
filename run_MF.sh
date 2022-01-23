@@ -2,33 +2,32 @@ ROOT="/home/sl1471/workspace/experiments";
 
 # data_key="ml-1m";
 # data_key="amz_Books";
-data_key='amz_Movies_and_TV';
+# data_key='amz_Movies_and_TV';
+data_key='amz_Electronics';
 
 mkdir -p ${ROOT}/${data_key}/models
 mkdir -p ${ROOT}/${data_key}/logs
 
 task_name="TopK";
-METRIC="_AUC";
-device=3;
+METRIC="_NDCG@50";
+device=1;
 
 model_name="MF";
-LR=0.003;
-BS=1024;
-REG=0.01;
+BS=256;
 LOSS="pairwisebpr";
 NNEG=1;
 DIM=32;
 
 
-for LR in 0.0003 0.001 0.0001 
+for LR in 0.0001
 do
-    for REG in 1.0 
+    for REG in 1.0
     do
         python main.py\
             --proctitle "Loki"\
             --model ${model_name}\
             --task ${task_name}\
-            --n_round 3\
+            --n_round 1\
             --train_and_eval\
             --seed 19\
             --optimizer "Adam"\

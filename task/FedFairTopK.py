@@ -96,8 +96,6 @@ class FedFairTopK(FedTopK):
             
             # local optimization
             local_response = model.local_optimize(wrapped_batch, local_info) 
-#             if self.fair_controller.get_fairness_opt_type() == "inepoch":
-#                 self.fair_controller.do_in_epoch(model, local_info) # fairness regularization
             step_loss.append(local_response["loss"])
             local_info['loss'] = local_response["loss"]
             
@@ -110,31 +108,6 @@ class FedFairTopK(FedTopK):
         print(f"#dropout device: {dropout_count}")
         return {"loss": np.mean(step_loss), "step_loss": step_loss}
 
-    def do_eval(self, model):
-        """
-        Evaluate the results for an eval dataset.
-        @input:
-        - model: GeneralRecModel or its extension
-        
-        @output:
-        - resultDict: {metric_name: metric_value}
-        """
-
-        print("Evaluating...")
-        print("Sample p = " + str(self.eval_sample_p))
-        model.eval()
-        if model.loss_type == "regression": # rating prediction evaluation
-#             report = self.evaluate_regression(model)
-            raise NotImplemented
-        else: # ranking evaluation
-            report = self.evaluate_userwise_ranking(model)
-#             params = {'selected_metric': self.stop_metric, 'at_k_list': self.at_k_list, 'eval_sample_p': self.eval_sample_p}
-#             fairness_report = self.fair_controller.add_fairness_evaluation(model, params)
-#             for k,v in fairness_report.items():
-#                 report["fair_" + k] = v
-        print("Result dict:")
-        print(str(report))
-        return report
 
     def evaluate_userwise_ranking(self, model):
         '''
@@ -185,12 +158,6 @@ class FedFairTopK(FedTopK):
                     for k,v in user_report.items():
                         report[k] += v
                     n_user_tested += 1
-                    # fairness eval
-#                     uid = batch_data["user_UserID"].reshape(-1).detach().cpu().numpy()[0]
-#                     loss = model.get_loss(feed_dict, out_dict)
-#                     self.fair_controller.upload_fairness_statistics({'device': uid, 
-#                                                                      'performance': 1. - loss.item()})
-#                                                                      'performance': user_report[self.stop_metric]})
         print(f"#dropout device during evaluation: {dropout_count}")
         # recommendation
         for key, value in report.items():
