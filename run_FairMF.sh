@@ -1,15 +1,11 @@
-ROOT="/home/sl1471/workspace/experiments";
+ROOT="~/workspace/experiments";
 
 data_key="ml-1m";
-# data_key="amz_Books";
 # data_key="amz_Movies_and_TV";
-
-mkdir -p ${ROOT}/${data_key}/models
-mkdir -p ${ROOT}/${data_key}/logs
 
 task_name="FairTopK";
 METRIC="_NDCG@50";
-device=2;
+device=0; # -1 if using cpu
 
 model_name="MF";
 REG=0.1;
@@ -19,9 +15,9 @@ DIM=32;
 
 rho=1;
 
-for LR in 0.00003
+for LR in 0.00003 0.0001 0.00001
 do
-    for group in 'activity'
+    for group in 'activity' 'Gender' 'Age'
     do
         for lambda in 0.1 0.3 0.5 0.7 0.9 -0.1 -0.3 -0.5 -0.7
         do
