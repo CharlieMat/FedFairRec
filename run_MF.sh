@@ -1,16 +1,11 @@
-ROOT="/home/sl1471/workspace/experiments";
+ROOT="~/workspace/experiments";
 
-# data_key="ml-1m";
-# data_key="amz_Books";
-# data_key='amz_Movies_and_TV';
-data_key='amz_Electronics';
-
-mkdir -p ${ROOT}/${data_key}/models
-mkdir -p ${ROOT}/${data_key}/logs
+data_key="ml-1m";
+# data_key="amz_Movies_and_TV";
 
 task_name="TopK";
 METRIC="_NDCG@50";
-device=1;
+device=0; # -1 if using cpu
 
 model_name="MF";
 BS=256;
@@ -19,9 +14,9 @@ NNEG=1;
 DIM=32;
 
 
-for LR in 0.0001
+for LR in 0.0001 0.0003 0.00003
 do
-    for REG in 1.0
+    for REG in 1.0 0.1 0
     do
         python main.py\
             --proctitle "Loki"\
