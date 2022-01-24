@@ -3,7 +3,7 @@ ROOT="~/workspace/experiments";
 data_key="ml-1m";
 # data_key="amz_Movies_and_TV";
 
-task_name="FairTopK";
+task_name="FedFairTopK";
 METRIC="_NDCG@50";
 device=0; # -1 if using cpu
 
