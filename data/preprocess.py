@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import time
 
-ROOT="~/workspace" # change this to your own directory
+ROOT="~/workspace/experiments" # change this to your own directory
 
 def build_vocab(df, save_path, column_names):
     with open(save_path, 'w') as fout:
