@@ -1,21 +1,11 @@
-ROOT="/home/sl1471/workspace/experiments";
+ROOT="~/workspace/experiments";
 
-# data_key="ml-1m";
-# data_key="amz_Books";
-data_key='amz_Movies_and_TV';
+data_key="ml-1m";
+# data_key="amz_Movies_and_TV";
 
-# train_file=${ROOT}${data_key}"/tsv_data/train.tsv";
-# val_file=${ROOT}${data_key}"/tsv_data/val.tsv";
-# test_file=${ROOT}${data_key}"/tsv_data/test.tsv";
-# user_vocab=${ROOT}${data_key}"/meta_data/user.vocab";
-# item_vocab=${ROOT}${data_key}"/meta_data/item.vocab";
-
-mkdir -p ${ROOT}/${data_key}/models
-mkdir -p ${ROOT}/${data_key}/logs
-
-task_name="FedFairTopK";
+task_name="FairTopK";
 METRIC="_NDCG@50";
-device=1;
+device=0; # -1 if using cpu
 
 model_name="FedMF";
 REG=1.0;
@@ -24,7 +14,7 @@ NNEG=1;
 DIM=32;
 
 rho=1;
-group='activity';
+group='activity'; # 'Gender' 'Age'
 
 DEVICE_DROPOUT=0.1;
 ELASTIC_MU=0.01;
@@ -32,9 +22,9 @@ FED_TYPE="fedavg";
 FED_BETA=1.0;
 N_LOCAL_STEP=1;
 
-for LR in 0.003
+for LR in 0.003 0.001 0.01 0.0003
 do
-    for sigma in 0.001
+    for sigma in 0.001 0.01 0
     do
         for lambda in 0.1 0.3 0.5 0.7 0.9 -0.1 -0.3 -0.5 -0.7
         do
