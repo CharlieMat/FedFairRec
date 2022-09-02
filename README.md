@@ -1,6 +1,7 @@
 # FedFairRec
 
-Federated Fairness-aware Recommendation
+Implementation of our paper in RecSys 2022: Fairness-aware Federated Matrix Factorization
+
 
 ## 0. Setup
 
